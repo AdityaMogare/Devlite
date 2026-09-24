@@ -59,7 +59,3 @@ Probes gather raw data into one `Facts` struct. Rules are pure functions from
 rules testable without a broken machine, removes any dependency ordering between
 checks, and keeps output deterministic. Do not blur it.
 
-## Adding a rule
-
-See `.cursorrules`, which documents the six-step loop and the constraints that
-apply to generated code.
