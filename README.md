@@ -6,6 +6,16 @@ with your setup and how to fix it, in plain English.
 **Status: v0.1 scaffold, macOS only.** Milestones 0-2 of the spec are complete
 and tested; the Python probe and its rules are the next piece.
 
+## Install
+
+macOS 11 or newer:
+
+```bash
+brew tap adityamogare/devlite https://github.com/AdityaMogare/Devlite.git
+brew install devlite
+devlite doctor
+```
+
 ## Build and run
 
 ```bash
@@ -50,7 +60,7 @@ cmake --build build-asan && ctest --test-dir build-asan --output-on-failure
   the highest-value next step: see spec sections 6 and 7 for the exact
   subprocess invocation and rule table.
 - The venv and repo rules.
-- Release packaging: Homebrew tap and install script.
+- A standalone install script. Homebrew is the supported install path.
 
 ## Architecture in one paragraph
 

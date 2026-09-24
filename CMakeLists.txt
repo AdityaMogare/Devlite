@@ -13,15 +13,35 @@ else()
     "and unsupported; see SPEC section 1.")
 endif()
 
-include(FetchContent)
-set(FETCHCONTENT_QUIET OFF)
-FetchContent_Declare(cli11
-  GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git GIT_TAG v2.4.2 GIT_SHALLOW TRUE)
-FetchContent_Declare(json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3 GIT_SHALLOW TRUE)
-FetchContent_Declare(googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG v1.15.2 GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(cli11 json googletest)
+include(CTest)
+include(GNUInstallDirs)
+
+# Homebrew builds with DEVLITE_FETCH_DEPS=OFF and the bottled CLI11 and
+# nlohmann-json packages. Local builds keep the FetchContent default.
+option(DEVLITE_FETCH_DEPS
+  "Download CLI11, nlohmann/json, and GoogleTest with FetchContent" ON)
+
+if(DEVLITE_FETCH_DEPS)
+  include(FetchContent)
+  set(FETCHCONTENT_QUIET OFF)
+  FetchContent_Declare(cli11
+    GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git GIT_TAG v2.4.2 GIT_SHALLOW TRUE)
+  FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3 GIT_SHALLOW TRUE)
+  set(devlite_fetched cli11 json)
+  if(BUILD_TESTING)
+    FetchContent_Declare(googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG v1.15.2 GIT_SHALLOW TRUE)
+    list(APPEND devlite_fetched googletest)
+  endif()
+  FetchContent_MakeAvailable(${devlite_fetched})
+else()
+  find_package(CLI11 CONFIG REQUIRED)
+  find_package(nlohmann_json CONFIG REQUIRED)
+  if(BUILD_TESTING)
+    find_package(GTest CONFIG REQUIRED)
+  endif()
+endif()
 
 add_library(devlite_core
   src/platform/environment.cpp
@@ -43,5 +63,8 @@ target_compile_definitions(devlite_core PUBLIC DEVLITE_VERSION="${PROJECT_VERSIO
 add_executable(devlite src/main.cpp)
 target_link_libraries(devlite PRIVATE devlite_core CLI11::CLI11)
 
-enable_testing()
-add_subdirectory(tests)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
+
+install(TARGETS devlite RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
