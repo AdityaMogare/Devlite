@@ -1,0 +1,34 @@
+This is a C++20 CLI tool for macOS. Read README.md and the DevLite spec before
+proposing changes.
+
+HARD RULES
+- No new third-party dependencies without asking. Current set: CLI11,
+  nlohmann/json, GoogleTest.
+- Subprocesses: argv arrays only. Never system(), popen(), or a shell string.
+- Only files under src/platform/ may touch OS APIs, env vars, or spawn processes.
+- Only files under src/rules/ may construct a Finding.
+- Rules are pure functions of Facts. No I/O, no exceptions, no globals.
+- Every new rule needs three tests: fires, stays silent, handles missing facts.
+- macOS only in v1. No Windows or Linux-specific code, no Python bindings,
+  no threads. Keep platform code POSIX where it costs nothing.
+- macOS has no pipe2(), memfd_create(), or /proc. Do not generate Linux-only
+  syscalls; they compile in CI images and fail on the target.
+- Exceptions never cross out of the platform layer; convert to result types.
+- Prefer std::optional over sentinel values. No raw new/delete.
+- include/devlite/facts.hpp is frozen for v1. Ask before changing it.
+
+ADDING A RULE (the only common task)
+1. Declare it in include/devlite/rules.hpp.
+2. Implement it in the matching src/rules/*_rules.cpp as a free function.
+3. Register it in src/rules/registry.cpp. Registry order is output order.
+4. Add three tests in tests/unit/rules_test.cpp using FactsBuilder.
+5. If it needs new data, add a probe field first and gather it in src/probes/.
+6. Add a fixture under fixtures/ that reproduces the condition, and wire it
+   into tests/integration/run_fixtures.sh.
+
+STYLE
+- Follow .clang-format. Do not reformat files you did not otherwise change.
+- Diagnostic text is plain English for beginners, no jargon.
+- Titles under 60 chars. Explanations 1-3 sentences saying why it matters.
+- When unsure between Warn and Fail, choose Warn. Never invent a fix you have
+  not reproduced: a wrong fix is worse than no fix.

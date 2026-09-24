@@ -1,0 +1,32 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-${{ hashFiles('CMakeLists.txt') }}
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - run: cmake --build build -j3
+      - run: ctest --test-dir build --output-on-failure
+
+  sanitizers:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build-asan -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -g"
+      - run: cmake --build build-asan -j3
+      - run: ctest --test-dir build-asan --output-on-failure
+
+  integration:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j3
+      - run: ./tests/integration/run_fixtures.sh

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "devlite_version": "0.1.0",
+  "platform": {
+    "os": "macos",
+    "arch": "arm64"
+  },
+  "summary": {
+    "pass": 1,
+    "warn": 1,
+    "fail": 1,
+    "skipped": 0,
+    "error": 0
+  },
+  "findings": [
+    {
+      "rule_id": "path.shadowed",
+      "status": "warn",
+      "title": "Multiple copies of git on your PATH",
+      "explanation": "Several copies of this command are installed.",
+      "suggested_actions": [
+        "Run `which -a git`"
+      ],
+      "evidence": [
+        "/opt/homebrew/bin/git (used)",
+        "/usr/bin/git"
+      ]
+    },
+    {
+      "rule_id": "git.identity-unset",
+      "status": "fail",
+      "title": "Git has no name or email configured",
+      "explanation": "Commits will be attributed to the wrong person.",
+      "suggested_actions": [
+        "git config --global user.name \"Your Name\""
+      ],
+      "evidence": []
+    },
+    {
+      "rule_id": "path.empty-entry",
+      "status": "pass",
+      "title": "PATH has no empty entries",
+      "explanation": "",
+      "suggested_actions": [],
+      "evidence": []
+    }
+  ]
+}

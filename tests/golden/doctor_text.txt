@@ -1,0 +1,12 @@
+
+  FAIL  Git has no name or email configured
+        Commits will be attributed to the wrong person.
+        -> git config --global user.name "Your Name"
+
+  WARN  Multiple copies of git on your PATH
+        Several copies of this command are installed.
+        -> Run `which -a git`
+        /opt/homebrew/bin/git (used)
+        /usr/bin/git
+
+  1 passed, 1 warning, 1 failure
