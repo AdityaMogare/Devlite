@@ -91,5 +91,172 @@ TEST(Registry, EvaluatesInRegistryOrderAndFiltersByGroup) {
   EXPECT_EQ(git_only[0].rule_id, "git.identity-unset");
 }
 
+PythonInfo sample_python() {
+  PythonInfo info;
+  info.executable = "/usr/bin/python3";
+  info.version = "3.12.4";
+  info.prefix = "/usr";
+  info.base_prefix = "/usr";
+  info.stdlib = "/usr/lib/python3.12";
+  info.has_pip = true;
+  info.externally_managed = false;
+  return info;
+}
+
+TEST(PythonNotFound, FiresWhenPython3IsAbsent) {
+  const auto findings = rule_python_not_found(FactsBuilder{}.build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "python.not-found");
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(PythonNotFound, SilentWhenPythonWasProbed) {
+  const Facts f = FactsBuilder{}.with_python(sample_python()).build();
+  EXPECT_TRUE(rule_python_not_found(f).empty());
+}
+
+TEST(PythonNotFound, SilentWhenPython3IsOnPathButUnprobed) {
+  const Facts f = FactsBuilder{}.with_tool("python3", {"/usr/bin/python3"}).build();
+  EXPECT_TRUE(rule_python_not_found(f).empty());
+}
+
+TEST(PythonVersionUnknown, FiresWhenVersionEmpty) {
+  PythonInfo info = sample_python();
+  info.version.clear();
+  const auto findings = rule_python_version_unknown(FactsBuilder{}.with_python(info).build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(PythonVersionUnknown, SilentWhenVersionPresent) {
+  EXPECT_TRUE(rule_python_version_unknown(FactsBuilder{}.with_python(sample_python()).build()).empty());
+}
+
+TEST(PythonVersionUnknown, SilentWhenPythonWasNeverProbed) {
+  EXPECT_TRUE(rule_python_version_unknown(FactsBuilder{}.build()).empty());
+}
+
+TEST(PythonNoPip, FiresWithoutPip) {
+  PythonInfo info = sample_python();
+  info.has_pip = false;
+  const auto findings = rule_python_no_pip(FactsBuilder{}.with_python(info).build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "python.no-pip");
+}
+
+TEST(PythonNoPip, SilentWhenPipPresent) {
+  EXPECT_TRUE(rule_python_no_pip(FactsBuilder{}.with_python(sample_python()).build()).empty());
+}
+
+TEST(PythonNoPip, SilentWhenPythonWasNeverProbed) {
+  EXPECT_TRUE(rule_python_no_pip(FactsBuilder{}.build()).empty());
+}
+
+TEST(PythonExternallyManaged, FiresForBaseInstall) {
+  PythonInfo info = sample_python();
+  info.externally_managed = true;
+  const auto findings =
+      rule_python_externally_managed(FactsBuilder{}.with_python(info).build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(PythonExternallyManaged, SilentInsideVirtualenv) {
+  PythonInfo info = sample_python();
+  info.externally_managed = true;
+  info.prefix = "/tmp/venv";
+  info.base_prefix = "/usr";
+  EXPECT_TRUE(
+      rule_python_externally_managed(FactsBuilder{}.with_python(info).build()).empty());
+}
+
+TEST(PythonExternallyManaged, SilentWhenPythonWasNeverProbed) {
+  EXPECT_TRUE(rule_python_externally_managed(FactsBuilder{}.build()).empty());
+}
+
+TEST(PythonPipMismatch, FiresWhenPipPointsElsewhere) {
+  PythonInfo info = sample_python();
+  info.pip_python = "/other/bin/python3";
+  const auto findings = rule_python_pip_mismatch(FactsBuilder{}.with_python(info).build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "python.pip-mismatch");
+}
+
+TEST(PythonPipMismatch, SilentWhenPipMatches) {
+  PythonInfo info = sample_python();
+  info.pip_python = info.executable;
+  EXPECT_TRUE(rule_python_pip_mismatch(FactsBuilder{}.with_python(info).build()).empty());
+}
+
+TEST(PythonPipMismatch, SilentWhenPipWasNotIdentified) {
+  EXPECT_TRUE(rule_python_pip_mismatch(FactsBuilder{}.with_python(sample_python()).build()).empty());
+}
+
+TEST(VenvNotActive, FiresWhenPrefixDiffers) {
+  const Facts f = FactsBuilder{}
+                      .with_python(sample_python())
+                      .with_virtual_env("/tmp/venv")
+                      .build();
+  const auto findings = rule_venv_not_active(f);
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(VenvNotActive, SilentWhenPrefixMatches) {
+  PythonInfo info = sample_python();
+  info.prefix = "/tmp/venv";
+  const Facts f = FactsBuilder{}.with_python(info).with_virtual_env("/tmp/venv").build();
+  EXPECT_TRUE(rule_venv_not_active(f).empty());
+}
+
+TEST(VenvNotActive, SkippedWhenPythonWasNeverProbed) {
+  const auto findings = rule_venv_not_active(FactsBuilder{}.with_virtual_env("/tmp/venv").build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Skipped);
+}
+
+TEST(VenvUnactivated, FiresWhenVenvPrefixAndNoVariable) {
+  PythonInfo info = sample_python();
+  info.prefix = "/tmp/venv";
+  info.base_prefix = "/usr";
+  const auto findings = rule_venv_unactivated(FactsBuilder{}.with_python(info).build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "venv.unactivated");
+}
+
+TEST(VenvUnactivated, SilentWhenActivated) {
+  PythonInfo info = sample_python();
+  info.prefix = "/tmp/venv";
+  info.base_prefix = "/usr";
+  const Facts f = FactsBuilder{}.with_python(info).with_virtual_env("/tmp/venv").build();
+  EXPECT_TRUE(rule_venv_unactivated(f).empty());
+}
+
+TEST(VenvUnactivated, SilentWhenPythonWasNeverProbed) {
+  EXPECT_TRUE(rule_venv_unactivated(FactsBuilder{}.build()).empty());
+}
+
+TEST(RepoRequiresPython, FiresWhenOlder) {
+  PythonInfo info = sample_python();
+  info.version = "3.9.6";
+  const Facts f = FactsBuilder{}.with_python(info).with_requires_python(">=3.11").build();
+  const auto findings = rule_repo_requires_python(f);
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(RepoRequiresPython, SilentWhenNewEnough) {
+  const Facts f =
+      FactsBuilder{}.with_python(sample_python()).with_requires_python(">=3.11").build();
+  EXPECT_TRUE(rule_repo_requires_python(f).empty());
+}
+
+TEST(RepoRequiresPython, SkippedWhenPythonWasNeverProbed) {
+  const auto findings =
+      rule_repo_requires_python(FactsBuilder{}.with_requires_python(">=3.11").build());
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].status, Status::Skipped);
+}
+
 }  // namespace
 }  // namespace devlite

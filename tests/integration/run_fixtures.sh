@@ -16,6 +16,7 @@ fi
 
 pass=0
 fail=0
+clean_ok=0
 
 # fixture | rule ids that must be present (space separated, "-" for none)
 run_fixture() {
@@ -37,6 +38,7 @@ run_fixture() {
   if [[ $ok -eq 1 ]]; then
     echo "  ok    $name"
     pass=$((pass + 1))
+    if [[ "$name" == "clean" ]]; then clean_ok=1; fi
   else
     echo "  FAIL  $name (expected: $expected)"
     echo "$output" | sed 's/^/        /'
@@ -46,9 +48,18 @@ run_fixture() {
 
 echo "running fixtures against $DEVLITE"
 run_fixture clean "-"
+if [[ $clean_ok -eq 1 ]]; then
+  echo "lab false positives: 0 (clean fixture)"
+fi
 run_fixture shadowed-python "path.shadowed"
 run_fixture empty-path-entry "path.empty-entry"
 run_fixture no-git-identity "git.identity-unset"
+run_fixture no-python "python.not-found"
+run_fixture externally-managed "python.externally-managed"
+run_fixture pip-mismatch "python.pip-mismatch"
+run_fixture venv-not-active "venv.not-active"
+run_fixture venv-unactivated "venv.unactivated"
+run_fixture repo-old-python "repo.requires-python"
 
 echo "$pass passed, $fail failed"
 [[ $fail -eq 0 ]]

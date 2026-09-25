@@ -8,6 +8,8 @@ Facts gather_facts(const ProbeOptions& opts, Environment& env, ProcessRunner& ru
   probe_platform(facts, env);
   probe_path(facts, env);
   probe_git(facts, runner);
+  probe_python(facts, runner);
+  probe_repo(facts);
   return facts;
 }
 

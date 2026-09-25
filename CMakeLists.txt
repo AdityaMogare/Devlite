@@ -50,9 +50,14 @@ add_library(devlite_core
   src/probes/platform_probe.cpp
   src/probes/path_probe.cpp
   src/probes/git_probe.cpp
+  src/probes/python_probe.cpp
+  src/probes/repo_probe.cpp
   src/probes/probe_runner.cpp
   src/rules/path_rules.cpp
   src/rules/git_rules.cpp
+  src/rules/python_rules.cpp
+  src/rules/venv_rules.cpp
+  src/rules/repo_rules.cpp
   src/rules/registry.cpp
   src/format/text_formatter.cpp
   src/format/json_formatter.cpp)

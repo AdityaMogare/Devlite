@@ -45,6 +45,18 @@ class FactsBuilder {
     facts_.git.user_email = std::move(email);
     return *this;
   }
+  FactsBuilder& with_python(PythonInfo info) {
+    facts_.python = std::move(info);
+    return *this;
+  }
+  FactsBuilder& with_virtual_env(fs::path path) {
+    facts_.virtual_env = std::move(path);
+    return *this;
+  }
+  FactsBuilder& with_requires_python(std::string specifier) {
+    facts_.repo.requires_python = std::move(specifier);
+    return *this;
+  }
   Facts build() const { return facts_; }
 
  private:

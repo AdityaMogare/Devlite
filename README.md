@@ -3,8 +3,7 @@
 A lightweight developer environment doctor. One command tells you what is wrong
 with your setup and how to fix it, in plain English.
 
-**Status: v0.1 scaffold, macOS only.** Milestones 0-2 of the spec are complete
-and tested; the Python probe and its rules are the next piece.
+**Status: v0.1, macOS only.** Path, Git, Python, virtualenv, and repo checks are implemented.
 
 ## Install
 
@@ -49,17 +48,13 @@ cmake --build build-asan && ctest --test-dir build-asan --output-on-failure
 | --- | --- |
 | `include/devlite/facts.hpp` | The data model. Frozen for v1. |
 | `src/platform/` | The only code that touches the OS: env, PATH, subprocess |
-| `src/probes/` | Gather facts. Platform, PATH and Git are done; Python and repo are not |
-| `src/rules/` | Pure functions from Facts to Findings. Three of ten written |
+| `src/probes/` | Gather facts. Platform, PATH, Git, Python, and repo |
+| `src/rules/` | Pure functions from Facts to Findings |
 | `src/format/` | Text and JSON output, both golden-tested |
 | `fixtures/` | Scripted broken environments, run by the integration harness |
 
 ## What is not here yet
 
-- The Python probe (`src/probes/python_probe.cpp`) and its five rules. This is
-  the highest-value next step: see spec sections 6 and 7 for the exact
-  subprocess invocation and rule table.
-- The venv and repo rules.
 - A standalone install script. Homebrew is the supported install path.
 
 ## Architecture in one paragraph

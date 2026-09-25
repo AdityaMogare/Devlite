@@ -10,6 +10,14 @@ const std::vector<RegisteredRule>& all_rules() {
       {"path.shadowed", "path", rule_path_shadowed},
       {"path.empty-entry", "path", rule_path_empty_entry},
       {"git.identity-unset", "git", rule_git_identity_unset},
+      {"python.not-found", "python", rule_python_not_found},
+      {"python.version-unknown", "python", rule_python_version_unknown},
+      {"python.no-pip", "python", rule_python_no_pip},
+      {"python.externally-managed", "python", rule_python_externally_managed},
+      {"python.pip-mismatch", "python", rule_python_pip_mismatch},
+      {"venv.not-active", "venv", rule_venv_not_active},
+      {"venv.unactivated", "venv", rule_venv_unactivated},
+      {"repo.requires-python", "repo", rule_repo_requires_python},
   };
   return rules;
 }

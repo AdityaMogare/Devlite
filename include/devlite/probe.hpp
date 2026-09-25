@@ -8,12 +8,14 @@ namespace devlite {
 void probe_platform(Facts& facts, const Environment& env);
 void probe_path(Facts& facts, const Environment& env);
 void probe_git(Facts& facts, ProcessRunner& runner);
+void probe_python(Facts& facts, ProcessRunner& runner);
+void probe_repo(Facts& facts);
 
 struct ProbeOptions {
   fs::path working_directory;
 };
 
-// Fixed order: platform, path, git. (python, repo: see SPEC section 6)
+// Fixed order: platform, path, git, python, repo.
 Facts gather_facts(const ProbeOptions& opts, Environment& env, ProcessRunner& runner);
 
 }  // namespace devlite
