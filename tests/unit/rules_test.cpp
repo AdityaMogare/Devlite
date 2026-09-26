@@ -74,6 +74,24 @@ TEST(GitIdentity, SkippedWhenGitMissing) {
   EXPECT_EQ(findings[0].status, Status::Skipped);
 }
 
+TEST(GitNotFound, FiresWhenRepoHasNoGit) {
+  const Facts f = FactsBuilder{}.with_git_repo(true).build();
+  const auto findings = rule_git_not_found(f);
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "git.not-found");
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(GitNotFound, SilentWhenGitIsOnPath) {
+  const Facts f =
+      FactsBuilder{}.with_git_repo(true).with_tool("git", {"/usr/bin/git"}).build();
+  EXPECT_TRUE(rule_git_not_found(f).empty());
+}
+
+TEST(GitNotFound, SilentWhenDirectoryIsNotARepo) {
+  EXPECT_TRUE(rule_git_not_found(FactsBuilder{}.build()).empty());
+}
+
 TEST(Registry, EvaluatesInRegistryOrderAndFiltersByGroup) {
   const Facts f = FactsBuilder{}
                       .with_tool("python3", {"/a/python3", "/b/python3"})
@@ -192,6 +210,29 @@ TEST(PythonPipMismatch, SilentWhenPipWasNotIdentified) {
   EXPECT_TRUE(rule_python_pip_mismatch(FactsBuilder{}.with_python(sample_python()).build()).empty());
 }
 
+TEST(PythonCommandMismatch, FiresWhenCommandsDiffer) {
+  const Facts f = FactsBuilder{}
+                      .with_tool("python", {"/usr/bin/python"})
+                      .with_tool("python3", {"/opt/homebrew/bin/python3"})
+                      .build();
+  const auto findings = rule_python_command_mismatch(f);
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "python.command-mismatch");
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(PythonCommandMismatch, SilentWhenCommandsAreTheSameFile) {
+  const Facts f = FactsBuilder{}
+                      .with_tool("python", {"/usr/bin/python3"})
+                      .with_tool("python3", {"/usr/bin/python3"})
+                      .build();
+  EXPECT_TRUE(rule_python_command_mismatch(f).empty());
+}
+
+TEST(PythonCommandMismatch, SilentWhenPythonWasNeverProbed) {
+  EXPECT_TRUE(rule_python_command_mismatch(FactsBuilder{}.build()).empty());
+}
+
 TEST(VenvNotActive, FiresWhenPrefixDiffers) {
   const Facts f = FactsBuilder{}
                       .with_python(sample_python())
@@ -236,6 +277,31 @@ TEST(VenvUnactivated, SilentWhenPythonWasNeverProbed) {
   EXPECT_TRUE(rule_venv_unactivated(FactsBuilder{}.build()).empty());
 }
 
+TEST(VenvDirInactive, FiresWhenProjectVenvIsNotActive) {
+  const Facts f = FactsBuilder{}
+                      .with_working_directory("/proj")
+                      .with_markers({".venv"})
+                      .with_virtual_env("/other/venv")
+                      .build();
+  const auto findings = rule_venv_dir_inactive(f);
+  ASSERT_EQ(findings.size(), 1u);
+  EXPECT_EQ(findings[0].rule_id, "venv.dir-inactive");
+  EXPECT_EQ(findings[0].status, Status::Warn);
+}
+
+TEST(VenvDirInactive, SilentWhenVirtualEnvMatches) {
+  const Facts f = FactsBuilder{}
+                      .with_working_directory("/proj")
+                      .with_markers({".venv"})
+                      .with_virtual_env("/proj/.venv")
+                      .build();
+  EXPECT_TRUE(rule_venv_dir_inactive(f).empty());
+}
+
+TEST(VenvDirInactive, SilentWhenNoProjectVenvWasFound) {
+  EXPECT_TRUE(rule_venv_dir_inactive(FactsBuilder{}.build()).empty());
+}
+
 TEST(RepoRequiresPython, FiresWhenOlder) {
   PythonInfo info = sample_python();
   info.version = "3.9.6";
@@ -256,6 +322,30 @@ TEST(RepoRequiresPython, SkippedWhenPythonWasNeverProbed) {
       rule_repo_requires_python(FactsBuilder{}.with_requires_python(">=3.11").build());
   ASSERT_EQ(findings.size(), 1u);
   EXPECT_EQ(findings[0].status, Status::Skipped);
+}
+
+TEST(BuildToolMissing, FiresWhenCMakeAndMakeAreAbsent) {
+  const Facts f =
+      FactsBuilder{}.with_markers({"CMakeLists.txt", "Makefile"}).build();
+  const auto findings = rule_build_tool_missing(f);
+  ASSERT_EQ(findings.size(), 2u);
+  EXPECT_EQ(findings[0].rule_id, "build.tool-missing");
+  EXPECT_EQ(findings[0].status, Status::Warn);
+  EXPECT_EQ(findings[1].rule_id, "build.tool-missing");
+  EXPECT_EQ(findings[1].evidence[0], "Makefile");
+}
+
+TEST(BuildToolMissing, SilentWhenToolsAreOnPath) {
+  const Facts f = FactsBuilder{}
+                      .with_markers({"CMakeLists.txt", "Makefile"})
+                      .with_tool("cmake", {"/opt/homebrew/bin/cmake"})
+                      .with_tool("make", {"/usr/bin/make"})
+                      .build();
+  EXPECT_TRUE(rule_build_tool_missing(f).empty());
+}
+
+TEST(BuildToolMissing, SilentWhenProjectHasNoBuildFiles) {
+  EXPECT_TRUE(rule_build_tool_missing(FactsBuilder{}.build()).empty());
 }
 
 }  // namespace

@@ -37,8 +37,9 @@ int main(int argc, char** argv) {
   doctor->add_option("--fail-on", fail_on, "Exit non-zero at: fail | warn")
       ->check(CLI::IsMember({"fail", "warn"}));
   doctor->add_option("--path", working_dir, "Directory to inspect");
-  doctor->add_option("--only", only, "Run one group: path, git, python, venv, repo (repeatable)")
-      ->check(CLI::IsMember({"path", "git", "python", "venv", "repo"}));
+  doctor->add_option("--only", only,
+                     "Run one group: path, git, python, venv, repo, build (repeatable)")
+      ->check(CLI::IsMember({"path", "git", "python", "venv", "repo", "build"}));
 
   try {
     app.parse(argc, argv);

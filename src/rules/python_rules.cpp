@@ -66,4 +66,20 @@ std::vector<Finding> rule_python_pip_mismatch(const Facts& facts) {
       {info->executable.string(), info->pip_python->string()}}};
 }
 
+std::vector<Finding> rule_python_command_mismatch(const Facts& facts) {
+  const auto python = facts.tools.find("python");
+  const auto python3 = facts.tools.find("python3");
+  if (python == facts.tools.end() || python3 == facts.tools.end()) return {};
+  if (python->second.locations.empty() || python3->second.locations.empty()) return {};
+  const fs::path& plain = python->second.locations.front();
+  const fs::path& versioned = python3->second.locations.front();
+  if (plain == versioned) return {};
+  return {Finding{
+      "python.command-mismatch", Status::Warn, "python and python3 are different programs",
+      "The python command and the python3 command are not the same file. A script that "
+      "runs python will not use the interpreter you get from python3.",
+      {"Call python3 explicitly, or make python point at the same file as python3"},
+      {plain.string(), versioned.string()}}};
+}
+
 }  // namespace devlite

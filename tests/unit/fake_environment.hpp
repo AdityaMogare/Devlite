@@ -57,6 +57,18 @@ class FactsBuilder {
     facts_.repo.requires_python = std::move(specifier);
     return *this;
   }
+  FactsBuilder& with_git_repo(bool is_repo) {
+    facts_.repo.is_git_repo = is_repo;
+    return *this;
+  }
+  FactsBuilder& with_markers(std::vector<std::string> markers) {
+    facts_.repo.markers = std::move(markers);
+    return *this;
+  }
+  FactsBuilder& with_working_directory(fs::path path) {
+    facts_.working_directory = std::move(path);
+    return *this;
+  }
   Facts build() const { return facts_; }
 
  private:

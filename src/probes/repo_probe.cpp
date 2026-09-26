@@ -42,10 +42,17 @@ void probe_repo(Facts& facts) {
   const fs::path& root = facts.working_directory;
   facts.repo.is_git_repo = is_file_or_dir(root / ".git");
 
-  const char* markers[] = {"pyproject.toml", "requirements.txt", "Pipfile", "setup.py"};
+  const char* markers[] = {"pyproject.toml", "requirements.txt", "Pipfile", "setup.py",
+                           "CMakeLists.txt", "Makefile"};
   for (const char* name : markers) {
     std::error_code ec;
     if (fs::is_regular_file(root / name, ec) && !ec) facts.repo.markers.emplace_back(name);
+  }
+  {
+    std::error_code ec;
+    if (fs::is_directory(root / ".venv", ec) && !ec) {
+      facts.repo.markers.emplace_back(".venv");
+    }
   }
 
   facts.repo.requires_python = read_requires_python(root / "pyproject.toml");

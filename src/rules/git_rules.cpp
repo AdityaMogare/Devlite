@@ -26,4 +26,16 @@ std::vector<Finding> rule_git_identity_unset(const Facts& facts) {
       std::move(missing)}};
 }
 
+std::vector<Finding> rule_git_not_found(const Facts& facts) {
+  if (!facts.repo.is_git_repo) return {};
+  const auto it = facts.tools.find("git");
+  if (it != facts.tools.end() && !it->second.locations.empty()) return {};
+  return {Finding{
+      "git.not-found", Status::Warn, "Git was not found",
+      "This folder is a Git repository, but the git command is not on your PATH. You "
+      "cannot commit, push, or see history until it is installed.",
+      {"Install Git with `xcode-select --install`"},
+      {}}};
+}
+
 }  // namespace devlite

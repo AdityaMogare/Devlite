@@ -3,7 +3,7 @@
 A lightweight developer environment doctor. One command tells you what is wrong
 with your setup and how to fix it, in plain English.
 
-**Status: v0.1, macOS only.** Path, Git, Python, virtualenv, and repo checks are implemented.
+**Status: v0.1, macOS only.** Path, Git, Python, virtualenv, repo, and build checks are implemented.
 
 ## Install
 
@@ -31,8 +31,8 @@ vendored.
 ## Test
 
 ```bash
-ctest --test-dir build --output-on-failure     # 26 unit + golden tests
-./tests/integration/run_fixtures.sh            # 4 fixture environments
+ctest --test-dir build --output-on-failure     # 62 unit + golden tests
+./tests/integration/run_fixtures.sh            # 14 fixture environments
 ```
 
 Sanitizers, after any change under `src/platform/`:

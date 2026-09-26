@@ -60,6 +60,10 @@ run_fixture pip-mismatch "python.pip-mismatch"
 run_fixture venv-not-active "venv.not-active"
 run_fixture venv-unactivated "venv.unactivated"
 run_fixture repo-old-python "repo.requires-python"
+run_fixture git-not-found "git.not-found"
+run_fixture python-command-mismatch "python.command-mismatch"
+run_fixture venv-dir-inactive "venv.dir-inactive"
+run_fixture build-tool-missing "build.tool-missing"
 
 echo "$pass passed, $fail failed"
 [[ $fail -eq 0 ]]

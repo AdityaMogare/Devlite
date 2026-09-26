@@ -13,7 +13,7 @@ using Rule = std::function<std::vector<Finding>(const Facts&)>;
 
 struct RegisteredRule {
   std::string id;
-  std::string group;  // "python" | "path" | "git" | "venv"
+  std::string group;  // "python" | "path" | "git" | "venv" | "repo" | "build"
   Rule fn;
 };
 

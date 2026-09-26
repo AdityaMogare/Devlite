@@ -58,6 +58,7 @@ add_library(devlite_core
   src/rules/python_rules.cpp
   src/rules/venv_rules.cpp
   src/rules/repo_rules.cpp
+  src/rules/build_rules.cpp
   src/rules/registry.cpp
   src/format/text_formatter.cpp
   src/format/json_formatter.cpp)
